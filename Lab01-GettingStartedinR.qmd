@@ -1,0 +1,156 @@
+---
+title: "Lab 1: R Basics"
+author: "Monica Do"
+toc: true
+number-sections: true
+format: html
+html:
+  code-link: true
+editor: visual
+---
+
+------------------------------------------------------------------------
+
+**Goals**
+
+-   Introduction to the R Workspace
+-   Learn to Inspect Data Files
+-   Rendering Files
+
+------------------------------------------------------------------------
+
+# Getting Started in R
+
+## Your R Project
+
+When you create your new R Project for this class, R creates a folder that acts as a 'working directory'. So, every time you open R, your default directory will be whatever you put in when you created your project. All the files in the directory - whether you created them in R or not - will appear in your Files tab. So, you dont have to type in a full path as long as your file is in the working directory.
+
+```{r}
+#| label: get working directory
+getwd()
+```
+
+And, if for some reason, you need to change your working directory
+
+```{r Setwd, eval=FALSE}
+setwd("/Volumes/GoogleDrive/My Drive/UChicago/Teaching/LING40310_GradIntroExperimentalMethods/Labs&Homework")
+```
+
+## Base Operators
+
+As you saw, basic math operations in R are pretty straight forward. And, if you have multiple operations, R will automatically PEMDAS. Logical operations are also pretty intuitive.
+
+![LogicalOperators](Images/LogicalOperators.png)
+
+**But** there is a huge difference between "=" and "==". In R, = is an Assignment Operator used to assign some value to something (e.g., a variable or function), while == is a Logical Operator that is used to compare two values.
+
+```{r Equals}
+OrangeCat = "Niles" 
+GrayCat <- "Daphne" # This is also an assignment operator
+
+OrangeCat == GrayCat
+```
+
+```{r CatTesting, eval=FALSE}
+OrangeCat = GrayCat # What do you think this would do?
+OrangeCat = Graycat # What does this error message tell us is wrong with the code? 
+```
+
+## Importing & Exporting
+
+### Packages
+
+R comes equipped with a lot of basic functions. By default, everytime you open RStudio, all the 'base' functions are loaded. But, sometimes we will need functions and data from outside of base R, that have been made by other developers. To access those data and functions, we have to install the package that that stuff comes in.
+
+```{r Install, eval=FALSE}
+install.packages() "tidyverse"
+```
+
+We will only ever have to install each package once. But, we will have to load the packages we need from the **library** every time we start a new R session.
+
+```{r Load}
+library(tidyverse)
+```
+
+::: callout-note
+When you share your documents, your intent is to distribute your *analyses* to another person. As a best practice, **it's not a good idea to include commands like install.packages() or remove.packages()**, because this will make system-wide changes to another person's R environment. So, you will not typically see these commands in shared docs. I'm only doing this for class demonstration purposes!
+:::
+
+### Data
+
+Of course, we will probably want to be able to **read in** our data files from external sources.
+
+```{r ReadIn}
+Cats_Wide = read_csv("PracticeDataSets/NeighborhoodCats_WideForm.csv")
+
+```
+
+::: callout-tip
+When we read in files, we are using **relative paths** - paths that navigate from our working directory, not **absolute paths** - which navigate from a folder outside the working directory. If, for instance, I put the absolute path in my scripts, another person would not be able to run the command, because that person would not have a folder for the user Monica on their computer. But, they can easily create folder called PracticeDataSets inside their own working directory (whatever that may be!) and refer to it.
+
+-   Example Relative Path:"PracticeDataSets/file.csv"
+-   Example Absolute Path:"C://User/Monica/somethingelse/something/something/PracticeDataSets/file.csv"
+:::
+
+You can also use read.csv() from base r in the same way. However, it is dispreferred for data structure & speed reasons.
+
+```{r ReadInBase, eval=FALSE}
+read.csv()
+```
+
+# Data Inspection
+
+Now that we know how to pull in a data set, we want to know what this data set actually contains.
+
+We can **View** the actual data set itself.
+
+```{r  CatsWide}
+view(Cats_Wide)
+```
+
+But, for large datasets, viewing the entire file is not going to be helpful. In order to know about the **structure** of the data, we can use:
+
+```{r Inspect}
+str(Cats_Wide)
+```
+
+# Why Quarto Documents?
+
+**Reason 1: Readability** When you use regular R scripts, there is no such thing as plain text. So, the explanation that I'm typing here, can't be displayed unless I want to include it as several lines of comments! Quarto documents let me visually separate lines of code from plain text information. To insert code chunks, we can click click the green +C button on the top right hand corner, then "Insert" \>\> "R". You can also use the keyboard shortcut \`cmd + i'.
+
+```{r Code}
+1 + 1 # I can make comments using the # symbol
+1 - 1 # The comments are visible in the script, but won't print out unless I print the code
+1 * 1
+1 / 1
+```
+
+**Reason 2: Organization** When you use regular R scripts, the output displays in the console. But, using Quarto (the updated version of Rmarkdown) docs, the results from each chunk of code are shown inline, immediately underneath the code chunk.
+
+```{r}
+print("Hello world!")
+```
+
+**Reason 3: Sharing** It makes communicating your results through an html or pdf document **very** easy later on. For example, this will print as regular text when I convert ('render') this document to a html or pdf.
+
+```{r Text}
+print("But, this is a chunk of code that will print inside a code box when I convert the document")
+```
+
+## Render to HTML
+
+To render this document, just click on the Render Arrow at the top!
+
+## Troubleshooting
+
+A. If an error comes up with XQuartz, you can first try to download XQuarts (https://www.xquartz.org/). If that doesn't work, you can also render the document by running the following command **in your console**
+
+```{r eval=FALSE}
+rmarkdown::render(".Rmd file title here")
+```
+
+B. If an error comes up saying something about a CRAN with no mirror, try this command, instead.
+
+```{r eval=FALSE}
+install.packages("PackageNameHere", repos = "http://cran.us.r-project.org")
+```
