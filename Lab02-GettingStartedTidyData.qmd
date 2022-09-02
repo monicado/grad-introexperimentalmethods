@@ -1,0 +1,342 @@
+---
+title: "Lab02-Getting Started with (Tidy) Data"
+author: "Monica Do"
+format: html
+---
+
+------------------------------------------------------------------------
+
+**Goals**
+
+-   Read in Data
+-   Learn to Organize Data the Tidy Way
+-   Learn to Format Data
+
+------------------------------------------------------------------------
+
+```{r Packages}
+library(tidyverse) 
+library(languageR)
+```
+
+# Inspecting our Data
+
+Let's say you want to know how English speakers judge size. So, you ask them to just rate how big they think some things are. You suspect, though, that maybe people will treat size a bit differently for things that are animals and things that are plants. Because size is a scalar adjective, evaluated in terms of a category and so small for an animal may be different than small for a plant. In addition, you think that the other thing that might influence how people judge size is how familiar people generally are with the object that is being judged.
+
+In reality, you would probably spend a month creating and then running this experiment. But thankfully this data already exists in the `languageR` package that we have installed.
+
+so let's start by loading in the **sizeRatings data from the languageR package**.
+
+```{r}
+sizeRatings
+?sizeRatings
+```
+
+------------------------------------------------------------------------
+
+Before we start button mashing in R. Let's figure out our **Plan of Analysis**
+
+a)  What is our Measure Variable? What are our Predictor Variables?
+b)  Are these Predictors within-subjects or between-subjects?
+
+------------------------------------------------------------------------
+
+Now that we have this data set, we want to know what this data set actually contains.We can see the entire data frame itself.
+
+```{r  CatsWide}
+view(sizeRatings)
+```
+
+But, for large datasets, viewing the entire file is not going to be helpful. In order to know about the **structure** of the data, we can use two different commands, depending on your needs:
+
+```{r Inspect}
+str(sizeRatings)
+```
+
+```{r}
+summary(sizeRatings)
+```
+
+Now that we understand the data that we've collected. Let's organize it to answer the question that we set out to ask.
+
+# Organizing Data the Tidy way!
+
+What is tidyverse really? It's a set of packages that were written for data science that allows us to arrange, clean, and manipulate our data easily. The functions are made to be much more intuitive and **importantly** they're made so that they can be processed in a sort of pipeline, so that the output of one function is serves as the input to another function. This is done using the `%>%` or `|>` pipe operators, which you can add using `ctrl + shift + m`.
+
+## Piping
+
+The `%>%` operator tells R to take the value on the left side of the `%>%` and use it for whatever operation is on the right side of the operator. This simple pipe command allows us to
+
+-   chain together sequences of operations
+-   avoid nested functions that are prone to error & difficult for someone else to parse
+-   reduce the need to create temporary objects
+-   make it easy to add or re-order steps anywhere in the sequence of operations
+
+To see what I mean, let's load a dataset from inside the LanguageR package called "sizeRatings."
+
+The `head()` function allows us to view the first 6 rows of a data frame.
+
+Using the base R syntax, we can directly input the data set as the object for `head()` to operate over.
+
+```{r sizeRatings, results='hide'}
+head(sizeRatings)
+```
+
+But, we can also do this using the tidy way.
+
+```{r}
+sizeRatings %>% 
+  head()
+```
+
+------------------------------------------------------------------------
+
+-   What output should I get using the first code versus the second code?
+
+```{r}
+sizeRatings %>% 
+  head() %>%
+  view()
+
+sizeRatings %>% 
+  view() %>%
+  head()
+```
+
+------------------------------------------------------------------------
+
+## Filtering
+
+`filter()` allows you to "filter out" the rows of data that you don't want based on a criteria.
+
+```{r English}
+sizeRatings %>%
+  filter(Language == "English") %>%
+  str() # Checking our work
+  
+sizeRatings %>%
+  filter(Language != "notEnglish") %>%
+  str()
+```
+
+------------------------------------------------------------------------
+
+-   What happens if I don't use the double =?
+-   How many participants did we exclude using the first method, how many for the second?
+
+------------------------------------------------------------------------
+
+Hmmm. This is interesting, our data now has 2106 observations, which is less than the number of observations from before. So, R did filter something out. But, it still also says that Subject is a factor with 38 levels, which is the same as before.
+
+`droplevels()` tells R to drop the empty levels of a factor from your dataframe.
+
+```{r DropnotEnglish}
+sizeRatings %>%
+  filter(Language == "English") %>%
+  droplevels() %>%
+  str() # Checking our work
+```
+
+## Selecting
+
+`select()` is like filter, but for columns. You can select the columns of interest based on some criteria.
+
+```{r Select, results='hide'}
+sizeRatings %>%
+  filter(Language == "English") %>%
+  droplevels() %>%
+  select(-c(Language))
+
+sizeRatings %>%
+  filter(Language == "English") %>%
+  droplevels() %>%
+  select(-c(starts_with("L"))) 
+
+sizeRatings %>%
+  filter(Language == "English") %>%
+  droplevels() %>%
+  select(-c(contains("l"))) 
+```
+
+## Mutating
+
+`mutate()` allows you to create news columns (variables) and add them to the existing dataframe.
+
+Let's say we want to create a new column that tells us the trial number for each item that each participant saw.
+
+```{r Trial, results='hide'}
+sizeRatings %>%
+  filter(Language == "English") %>%
+  droplevels() %>%
+  select(-c(Language)) %>%
+  mutate(Trial = rep(1:81, 26))
+```
+
+## Case_when
+
+`case_when()` allows us apply functions conditionally, that is if some condition is met, then we can do X action, if that condition is not met, we perform Y action. Let's combine this with `mutate()` to create a new column that breaks MeanFamiliarity up into three categories - High, Mid, & Low.
+
+```{r FamiliarityType, results ='hide'}
+sizeRatings %>%
+  filter(Language == "English") %>%
+  droplevels() %>%
+  select(-c(Language)) %>%
+  mutate(Trial = rep(1:81, 26)) %>%
+  mutate(FamiliarityType = case_when(
+    MeanFamiliarity <= 1 ~ "Low",
+    MeanFamiliarity > 1 & MeanFamiliarity < 3 ~ "Mid",
+    MeanFamiliarity >= 3 ~ "High"
+    )
+  )
+```
+
+Couple of things we notice and want to fix.
+
+```{r ReorderCol}
+sizeRatings %>%
+  filter(Language == "English") %>%
+  droplevels() %>%
+  select(-c(Language)) %>%
+  mutate(Trial = rep(1:81, 26)) %>%
+  mutate(FamiliarityType = case_when(
+    MeanFamiliarity <= 1 ~ "Low",
+    MeanFamiliarity > 1 & MeanFamiliarity < 3 ~ "Mid",
+    MeanFamiliarity >= 3 ~ "High"
+    )
+  ) %>%
+  select(Rating:Word, Trial, FamiliarityType, Class:MeanFamiliarity) %>%
+  head()
+```
+
+------------------------------------------------------------------------
+
+-   What did the second `select()` do here?
+
+------------------------------------------------------------------------
+
+```{r ToFactor}
+sizeRatings_Eng = sizeRatings %>%
+  filter(Language == "English") %>%
+  droplevels() %>%
+  select(-c(Language)) %>%
+  mutate(Trial = rep(1:81, 26)) %>%
+  mutate(FamiliarityType = as.factor(
+    case_when(
+    MeanFamiliarity <= 1 ~ "Low",
+    MeanFamiliarity > 1 & MeanFamiliarity < 3 ~ "Mid",
+    MeanFamiliarity >= 3 ~ "High"
+      )
+    )
+  ) %>%
+  select(Rating:Word, Trial, FamiliarityType, Class:MeanFamiliarity) %>%
+  head()
+
+# Now that we're happy with our data set, we're going to rename it sizeRatings_Eng 
+```
+
+------------------------------------------------------------------------
+
+-   What did the `as.factor()` do here?
+
+------------------------------------------------------------------------
+
+You can check the type of variable in each of the columns using the `class()` command.
+
+```{r}
+class(sizeRatings[,2]); class(sizeRatings$FamiliarityType)
+```
+
+------------------------------------------------------------------------
+
+-   Both of these `class()` commands gave the same, right answer. But, which of these methods do you think is better?
+
+------------------------------------------------------------------------
+
+You can also list all the levels of a variable using the `levels()` command
+
+```{r}
+levels(sizeRatings$Word)
+```
+
+#### An Untidy Example
+
+For comparison, if I didn't do this in the Tidyverse, I would have to do something like this *just to get through the first 3 operations*.
+
+```{r eval=FALSE}
+sizeRatings_Eng = subset(sizeRatings, Language =="English")
+sizeRatings_Eng = droplevels(sizeRatings_Eng)
+sizeRatings_Eng = sizeRatings_Eng[,-c(Language)]
+```
+
+Or, I'd have to do something quite convoluted like this which is really difficult to parse and is prone to errors because you have to keep track of which function you're in. And, if you refer to column numbers rather than column names, you run the risk of deleting the wrong column if your data set changes later.
+
+```{r eval=FALSE}
+sizeRatings_Eng = droplevels(subset(sizeRatings, Language == "English"))[,-c(6)]
+```
+
+# Formatting your Data
+
+## Read in Data
+
+In most cases, you won't be using data that comes from R. Instead, you'd want to **read in** your data files from external sources. Let's read in the Cats_Wide file, which should already be in the PracticeDataSets sub-folder of the working directory that we created last class.
+
+```{r ReadIn}
+Cats_Wide = read_csv("PracticeDataSets/NeighborhoodCats_WideForm.csv")
+```
+
+::: callout-tip
+### Relative vs Absolute Paths
+
+-   Example Relative Path:"PracticeDataSets/file.csv"
+-   Example Absolute Path:"C://User/Monica/somethingelse/something/something/PracticeDataSets/file.csv"
+
+When we read in files, we want to use **relative paths** - paths that navigate from our working directory, not **absolute paths** - which navigate from a folder outside the working directory. If, for instance, I put the absolute path in my scripts, another person would not be able to run the command, because that person would (presumably!) not have a folder called 'Monica' on their computer. But, they can easily create folder called PracticeDataSets inside their own working directory (wherever that may be!) and refer to it.
+:::
+
+## Long vs Wide Form
+
+One of the most important things you need to know in order to make sure your statistical functions work properly is to make sure your data is in the right format. This is because some statistical tests (like your basic t-test) in R require you to be in a format called "Wide Form" while other statistical tests (like Linear Regressions) require you to be in a format called "Long Form". So, in order to use these tests properly, we need to be able to comfortably switch between these two forms.
+
+As you probably expected, the Cats_Wide data is in **Wide Form**. Here, the data is structure so that each neighborhood has it's own row and observations for the same factor Types of Tabbies, is in two separate columns. And, if you were out collecting this cat data, this is probably how you would go about collecting it.
+
+```{r CatsWide}
+Cats_Wide = read_csv("PracticeDataSets/NeighborhoodCats_WideForm.csv"); head(Cats_Wide)
+```
+
+Usually, though, the analyses you will be doing require you to be in something called **Long Form**. In long form, each variable - DVs and IVs, alike - are arranged in their own separate columns. So here, the Measured Variable, Cat Count, is in a column of its own. And, unlike in the Wide Form, where we have same Independent Variable (cat type) spread out across multiple columns, Cat Type is also in a column of it's own here. The Neighborhood has multiple rows for each observation.
+
+```{r CatsLong}
+Cats_Long = read_csv("PracticeDataSets/NeighborhoodCats_LongForm.csv"); head(Cats_Long)
+```
+
+![Structure of Long Form Data](Images/TidyFormat.png)
+
+## Pivoting (between forms)
+To go between Long and Wide forms, we want to use the `pivot()` commands. (There are others out there - including spread, melt, gather, reshape - that you may wish to explore, but those have been superceded by Pivot, which is the most intuitive.)
+
+### Wide to Long
+
+```{r ToLong}
+Cats_Wide %>%
+  pivot_longer(
+    cols = c(OrangeTabbies, GrayTabbies), # The columns that contains the values, not variables, we want
+    names_to = "CatType", # The name of the NEW column that will contain the variable name we want
+    values_to = "Count") # The name of the NEW column that we want to move the values into
+```
+
+### Long to Wide
+
+Ok. Now let's try going the other way with pivot_wider
+
+```{r ToWide}
+Cats_Long %>%
+  pivot_wider(id_cols = NeighborhoodName, # The column identifying where each observation came from
+              names_from = CatType, # The column containing names for NEW columns
+              values_from = Count) # The column containing values for NEW columns
+```
+
+------------------------------------------------------------------------
+
+-   Notice anything about when we needed to use "" and when we didn't?
+
+------------------------------------------------------------------------

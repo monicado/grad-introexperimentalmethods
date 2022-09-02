@@ -1,0 +1,41 @@
+---
+title: "HW02-Getting Started with (Tidy) Data"
+author: "Monica Do"
+format: html
+---
+
+# Homework 2 Exercises
+
+## 1. Data inspection
+
+Let's use a data set called **latinsquare from the languageR package** to practice inspecting our data sets.
+
+a.  What are the dimensions of this data set? How many rows, how many columns?
+b.  What are the levels in the SOA variable?
+c.  How many subjects were tested?
+d.  How many words were they each tested on?
+
+## 2. Pivoting
+
+Read in the "latinsquare_wide.csv" and "latinsquare_long.csv" files from your working directory
+
+a.  Turn the latinsquare_wide file into a long form dataset with "SOA" for the discrete Predictor Variable and "MeanRT" for the continuous Measure Variable.
+b.  Turn the latinsquare_long file into a wide form dataset that looks like the latinsquare_wide file
+
+## 3. Tidying your data
+
+Use the **lexdec** data from the languageR package. Using the tidyverse operations, do the following **all in one code chunk**:
+
+a.  Exclude data from non-native English speakers and any incorrect responses. Get rid of the Sex column, any column with "mean" in the title, the SubjFreq column, and any column with BNC information
+
+b.  Like `case_when()`, `ifelse()` is a conditional: it returns a value *if* a condition is TRUE and a different value *else*where. Unlike case_when(), it can only test whether one condition is met. So, it is less powerful than `case_when()`, but if you only have one test condition, it's faster and does the same thing.
+
+    Use the `ifelse()` function to add a column for the factor "FreqType". In this column, put "LowFreq" for anything smaller than to the Mean value of the Frequency column, and "HighFreq" for anything larger or equal than the Mean.
+
+c.  The RT column right now reports log-transformed RTs. But, the log scale is notoriously hard to interpret. Use the `exp()` function to get the anti-log values and add a column called "RTRaw" with the raw lexical decision times.
+
+d.  Use the str() function at the end to "show" your work
+
+::: callout-tip
+Want more practice tidying data? Check out work his super cute [tutorial](https://allisonhorst.shinyapps.io/dplyr-learnr/#section-welcome "More tidy practice!") by R guru & artist-in-residence, Allison Horst!
+:::
